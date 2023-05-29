@@ -84,6 +84,47 @@ class CreditServiceTest {
         //verify(exactly = 1){ creditService.save(fakeCredit) }
     }
 
+    //findAll() cannot be tested using unit Test because they dont have an internal logic an return always an iterable
+
+    @Test
+    fun `should return a credit by passing CreditCode`(){
+        //given
+        val fakeCustomerId : Long = Random().nextLong()
+        val fakeCustomer : Customer = CustomerServiceTest.buildCustomer();
+        fakeCustomer.id = fakeCustomerId
+
+        val fakeCreditCode : UUID = UUID.randomUUID();
+        val fakeCredit : Credit = buildCredit(customer = fakeCustomer)
+        fakeCredit.creditCode = fakeCreditCode;
+
+        every { creditRepository.findByCreditCode(fakeCreditCode) } returns fakeCredit
+        //when
+
+        var actual:Credit =  creditService.findByCreditCode(customerId = fakeCustomerId, creditCode = fakeCreditCode)
+
+        //then
+        Assertions.assertThat(actual).isSameAs(fakeCredit)
+    }
+
+    @Test
+    fun `should generate an BusinessException by findByCreditCode`(){
+        //given
+        val fakeCustomerId : Long = Random().nextLong()
+        val fakeCustomer : Customer = CustomerServiceTest.buildCustomer();
+        fakeCustomer.id = fakeCustomerId
+
+        val fakeCreditCode : UUID = UUID.randomUUID();
+        val fakeCredit : Credit = buildCredit(customer = fakeCustomer)
+        fakeCredit.creditCode = fakeCreditCode;
+
+        every { creditRepository.findByCreditCode(fakeCreditCode) } returns null
+        //when
+        //then
+        Assertions.assertThatExceptionOfType(BusinessException::class.java)
+                .isThrownBy { creditService.findByCreditCode(customerId = fakeCustomerId, creditCode = fakeCreditCode) }
+                .withMessage("Creditcode $fakeCreditCode not found")
+    }
+
     companion object {
         private fun buildCredit(
                 creditValue: BigDecimal = BigDecimal.valueOf(100.0),
